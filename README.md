@@ -1,15 +1,15 @@
 # PSHealthWatch
 
-A PowerShell module for Windows system health monitoring with automated Freshservice incident ticketing.
+A PowerShell module for Windows system health monitoring with automated Jira Service Management incident ticketing.
 
-Monitors CPU, memory, disk, GPU, and critical Windows services. When a threshold is breached, it automatically opens a structured incident ticket in Freshservice. No manual intervention needed.
+Monitors CPU, memory, disk, GPU, and critical Windows services. When a threshold is breached, it automatically opens a structured incident in Jira. No manual intervention needed.
 
 ## Features
 
 * **Modular architecture**: each metric is an independent, reusable function
 * **Pipeline-native**: all functions accept pipeline input and emit typed `PSCustomObject` output
 * **Argument completers**: tab-completion for drive letters and service names
-* **Freshservice integration**: auto-creates HTML-formatted incident tickets via REST API
+* **Jira integration**: auto-creates ADF-formatted incidents via Jira REST API v3
 * **WhatIf support**: test ticket creation without submitting
 * **Remote-ready**: pass `-ComputerName` to any function to query remote machines
 
@@ -17,15 +17,12 @@ Monitors CPU, memory, disk, GPU, and critical Windows services. When a threshold
 
 * PowerShell 7.0+
 * Windows 10 / Windows Server 2016+
-* Freshservice account + API key (for ticketing)
+* Jira Service Management account + API token (for ticketing)
 
 ## Installation
 
 ```powershell
-# Clone the repo
 git clone https://github.com/Ooodee/PSHealthWatch.git
-
-# Import the module
 Import-Module .\PSHealthWatch\PSHealthWatch.psd1
 ```
 
@@ -63,29 +60,31 @@ Get-ServiceHealth                  # tab-completion on service names
 ### Full scan with auto-ticketing
 
 ```powershell
-$apiKey = 'your-freshservice-api-key'
+$apiKey = 'your-jira-api-token'
 
 Invoke-HealthScan -AutoTicket `
-                  -Domain        'mycompany' `
-                  -ApiKey        $apiKey `
-                  -RequesterEmail 'ops@mycompany.com'
+                  -Site       'yoursite.atlassian.net' `
+                  -Email      'you@example.com' `
+                  -ApiKey     $apiKey `
+                  -ProjectKey 'SUP'
 ```
 
 ### WhatIf: preview ticket without submitting
 
 ```powershell
-Invoke-HealthScan -AutoTicket -Domain mycompany -ApiKey $key -RequesterEmail ops@co.com -WhatIf
+Invoke-HealthScan -AutoTicket -Site yoursite.atlassian.net -Email you@example.com -ApiKey $key -ProjectKey SUP -WhatIf
 ```
 
 ### Manual ticket from health data
 
 ```powershell
-$health = Get-SystemHealth -ComputerName SRV01
+$health = Get-SystemHealth
 New-HealthTicket -HealthData $health `
-                 -Domain        'mycompany' `
-                 -ApiKey        $apiKey `
-                 -RequesterEmail 'ops@mycompany.com' `
-                 -Priority       High
+                 -Site       'yoursite.atlassian.net' `
+                 -Email      'you@example.com' `
+                 -ApiKey     $apiKey `
+                 -ProjectKey 'SUP' `
+                 -Priority    High
 ```
 
 ### Export results to CSV
@@ -94,12 +93,13 @@ New-HealthTicket -HealthData $health `
 Get-SystemHealth | Select-Object -ExpandProperty AllMetrics | Export-Csv health-report.csv -NoTypeInformation
 ```
 
-## Freshservice Setup
+## Jira Setup
 
-1. Log in to your Freshservice account
-2. Go to **Profile Settings > API Key**
-3. Copy the key and pass it as `-ApiKey`
-4. Your subdomain is the part before `.freshservice.com` in your URL
+1. Log in to your Atlassian account
+2. Go to **id.atlassian.com/manage-profile/security/api-tokens**
+3. Create an API token and copy it
+4. Your site URL is the `yoursite.atlassian.net` part of your Jira URL
+5. Your project key is visible in the URL when inside a project
 
 ## Configuration
 
@@ -118,20 +118,21 @@ Copy `config/thresholds.example.psd1` to `config/thresholds.psd1` and adjust val
 
 ```
 PSHealthWatch/
-├── PSHealthWatch.psd1          # Module manifest
-├── PSHealthWatch.psm1          # Module root
+├── PSHealthWatch.psd1
+├── PSHealthWatch.psm1
 ├── Public/
 │   ├── Get-CPUHealth.ps1
 │   ├── Get-MemoryHealth.ps1
 │   ├── Get-DiskHealth.ps1
 │   ├── Get-GPUHealth.ps1
 │   ├── Get-ServiceHealth.ps1
-│   ├── Get-SystemHealth.ps1    # Aggregates all metrics
-│   ├── New-HealthTicket.ps1    # Creates Freshservice incident
-│   └── Invoke-HealthScan.ps1  # Main entry point
+│   ├── Get-SystemHealth.ps1
+│   ├── New-HealthTicket.ps1
+│   └── Invoke-HealthScan.ps1
 ├── Private/
-│   ├── Invoke-FreshserviceApi.ps1
-│   └── ConvertTo-TicketBody.ps1
+│   ├── Invoke-JiraApi.ps1
+│   ├── ConvertTo-TicketBody.ps1
+│   └── New-AdfTable.ps1
 └── config/
     └── thresholds.example.psd1
 ```

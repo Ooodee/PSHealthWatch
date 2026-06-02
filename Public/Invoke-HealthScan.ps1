@@ -1,19 +1,21 @@
 function Invoke-HealthScan {
     <#
     .SYNOPSIS
-        Runs a full system health scan and optionally auto-creates a Freshservice
-        incident ticket when any metric exceeds its threshold.
+        Runs a full system health scan and optionally auto-creates a Jira Service
+        Management incident when any metric exceeds its threshold.
     .PARAMETER ComputerName
         Target computer(s) to scan. Defaults to local machine. Accepts pipeline input.
     .PARAMETER AutoTicket
-        When set, automatically creates a Freshservice ticket for Warning or Critical results.
-        Requires -Domain, -ApiKey, and -RequesterEmail.
-    .PARAMETER Domain
-        Freshservice subdomain (e.g. 'mycompany').
+        When set, automatically creates a Jira ticket for Warning or Critical results.
+        Requires -Site, -Email, -ApiKey, and -ProjectKey.
+    .PARAMETER Site
+        Jira site URL (e.g. 'ojdandan.atlassian.net').
+    .PARAMETER Email
+        Atlassian account email for authentication.
     .PARAMETER ApiKey
-        Freshservice API key.
-    .PARAMETER RequesterEmail
-        Requester email for ticket creation.
+        Jira API token.
+    .PARAMETER ProjectKey
+        Jira project key (e.g. 'SUP').
     .PARAMETER CpuThreshold
         CPU warning threshold in percent. Default: 85.
     .PARAMETER MemoryThreshold
@@ -23,11 +25,11 @@ function Invoke-HealthScan {
     .EXAMPLE
         Invoke-HealthScan
     .EXAMPLE
-        Invoke-HealthScan -AutoTicket -Domain 'mycompany' -ApiKey $key -RequesterEmail 'ops@mycompany.com'
+        Invoke-HealthScan -AutoTicket -Site 'ojdandan.atlassian.net' -Email 'you@gmail.com' -ApiKey $key -ProjectKey 'SUP'
     .EXAMPLE
-        'SRV01','SRV02' | Invoke-HealthScan -AutoTicket -Domain mycompany -ApiKey $key -RequesterEmail ops@co.com
+        'SRV01','SRV02' | Invoke-HealthScan -AutoTicket -Site ojdandan.atlassian.net -Email you@gmail.com -ApiKey $key -ProjectKey SUP
     .EXAMPLE
-        Invoke-HealthScan -AutoTicket -Domain mycompany -ApiKey $key -RequesterEmail ops@co.com -WhatIf
+        Invoke-HealthScan -AutoTicket -Site ojdandan.atlassian.net -Email you@gmail.com -ApiKey $key -ProjectKey SUP -WhatIf
     #>
     [CmdletBinding(SupportsShouldProcess)]
     param (
@@ -38,13 +40,16 @@ function Invoke-HealthScan {
         [switch]$AutoTicket,
 
         [Parameter()]
-        [string]$Domain,
+        [string]$Site,
+
+        [Parameter()]
+        [string]$Email,
 
         [Parameter()]
         [string]$ApiKey,
 
         [Parameter()]
-        [string]$RequesterEmail,
+        [string]$ProjectKey,
 
         [int]$CpuThreshold    = 85,
         [int]$MemoryThreshold = 80,
@@ -63,14 +68,15 @@ function Invoke-HealthScan {
             Write-Output $health
 
             if ($AutoTicket -and $health.OverallStatus -ne 'OK') {
-                if (-not $Domain -or -not $ApiKey -or -not $RequesterEmail) {
-                    Write-Warning '-AutoTicket requires -Domain, -ApiKey, and -RequesterEmail.'
+                if (-not $Site -or -not $Email -or -not $ApiKey -or -not $ProjectKey) {
+                    Write-Warning '-AutoTicket requires -Site, -Email, -ApiKey, and -ProjectKey.'
                     continue
                 }
 
-                $health | New-HealthTicket -Domain $Domain `
-                                           -ApiKey $ApiKey `
-                                           -RequesterEmail $RequesterEmail `
+                $health | New-HealthTicket -Site       $Site `
+                                           -Email      $Email `
+                                           -ApiKey     $ApiKey `
+                                           -ProjectKey $ProjectKey `
                                            -WhatIf:($WhatIfPreference)
             }
         }
