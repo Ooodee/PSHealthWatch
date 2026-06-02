@@ -55,7 +55,7 @@ function New-HealthTicket {
             }
         }
 
-        $subject = "[PSHealthWatch] $($HealthData.OverallStatus): $($HealthData.ComputerName) — $($HealthData.AlertCount) alert(s)"
+        $subject = "[PSHealthWatch] $($HealthData.OverallStatus): $($HealthData.ComputerName), $($HealthData.AlertCount) alert(s)"
         $body    = ConvertTo-TicketBody -HealthData $HealthData
 
         $ticket = @{

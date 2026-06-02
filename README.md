@@ -2,22 +2,22 @@
 
 A PowerShell module for Windows system health monitoring with automated Freshservice incident ticketing.
 
-Monitors CPU, memory, disk, GPU, and critical Windows services. When a threshold is breached, it automatically opens a structured incident ticket in Freshservice — no manual intervention needed.
+Monitors CPU, memory, disk, GPU, and critical Windows services. When a threshold is breached, it automatically opens a structured incident ticket in Freshservice. No manual intervention needed.
 
 ## Features
 
-- **Modular architecture** — each metric is an independent, reusable function
-- **Pipeline-native** — all functions accept pipeline input and emit typed `PSCustomObject` output
-- **Argument completers** — tab-completion for drive letters and service names
-- **Freshservice integration** — auto-creates HTML-formatted incident tickets via REST API
-- **WhatIf support** — test ticket creation without submitting
-- **Remote-ready** — pass `-ComputerName` to any function to query remote machines
+* **Modular architecture**: each metric is an independent, reusable function
+* **Pipeline-native**: all functions accept pipeline input and emit typed `PSCustomObject` output
+* **Argument completers**: tab-completion for drive letters and service names
+* **Freshservice integration**: auto-creates HTML-formatted incident tickets via REST API
+* **WhatIf support**: test ticket creation without submitting
+* **Remote-ready**: pass `-ComputerName` to any function to query remote machines
 
 ## Requirements
 
-- PowerShell 7.0+
-- Windows 10 / Windows Server 2016+
-- Freshservice account + API key (for ticketing)
+* PowerShell 7.0+
+* Windows 10 / Windows Server 2016+
+* Freshservice account + API key (for ticketing)
 
 ## Installation
 
@@ -71,7 +71,7 @@ Invoke-HealthScan -AutoTicket `
                   -RequesterEmail 'ops@mycompany.com'
 ```
 
-### WhatIf — preview ticket without submitting
+### WhatIf: preview ticket without submitting
 
 ```powershell
 Invoke-HealthScan -AutoTicket -Domain mycompany -ApiKey $key -RequesterEmail ops@co.com -WhatIf
@@ -97,7 +97,7 @@ Get-SystemHealth | Select-Object -ExpandProperty AllMetrics | Export-Csv health-
 ## Freshservice Setup
 
 1. Log in to your Freshservice account
-2. Go to **Profile Settings → API Key**
+2. Go to **Profile Settings > API Key**
 3. Copy the key and pass it as `-ApiKey`
 4. Your subdomain is the part before `.freshservice.com` in your URL
 

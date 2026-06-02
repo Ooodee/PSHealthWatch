@@ -1,10 +1,10 @@
-# PSHealthWatch — threshold configuration example
+# PSHealthWatch threshold configuration example
 # Copy to thresholds.psd1 and adjust values to match your environment.
 
 @{
     CPU = @{
-        Warning  = 85   # % — status becomes Warning above this value
-        Critical = 95   # % — status becomes Critical above this value
+        Warning  = 85   # status becomes Warning above this value
+        Critical = 95   # status becomes Critical above this value
     }
     Memory = @{
         Warning  = 80
