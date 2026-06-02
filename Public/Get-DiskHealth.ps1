@@ -46,8 +46,10 @@ function Get-DiskHealth {
                     $filter  = "DriveType=3 AND ($letters)"
                 }
 
-                $disks = Get-CimInstance -ClassName Win32_LogicalDisk -Filter $filter `
-                             -ComputerName $computer -ErrorAction Stop
+                $isLocal = $computer -in @($env:COMPUTERNAME, 'localhost', '127.0.0.1', '.')
+                $cimArgs = @{ ClassName = 'Win32_LogicalDisk'; Filter = $filter; ErrorAction = 'Stop' }
+                if (-not $isLocal) { $cimArgs.ComputerName = $computer }
+                $disks = Get-CimInstance @cimArgs
 
                 foreach ($disk in $disks) {
                     $totalGB = [math]::Round($disk.Size      / 1GB, 2)

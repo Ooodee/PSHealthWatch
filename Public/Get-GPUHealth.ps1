@@ -22,13 +22,18 @@ function Get-GPUHealth {
     process {
         foreach ($computer in $ComputerName) {
             try {
-                $gpus = Get-CimInstance -ClassName Win32_VideoController -ComputerName $computer -ErrorAction Stop
+                $isLocal = $computer -in @($env:COMPUTERNAME, 'localhost', '127.0.0.1', '.')
+                $cimArgs = @{ ClassName = 'Win32_VideoController'; ErrorAction = 'Stop' }
+                if (-not $isLocal) { $cimArgs.ComputerName = $computer }
+                $gpus = Get-CimInstance @cimArgs
 
                 foreach ($gpu in $gpus) {
                     $usagePct = $null
                     try {
                         $counterPath = '\GPU Engine(*engtype_3D*)\Utilization Percentage'
-                        $samples     = Get-Counter -Counter $counterPath -ComputerName $computer -ErrorAction Stop
+                        $counterArgs = @{ Counter = $counterPath; ErrorAction = 'Stop' }
+                        if (-not $isLocal) { $counterArgs.ComputerName = $computer }
+                        $samples     = Get-Counter @counterArgs
                         $usagePct    = [math]::Round(
                             ($samples.CounterSamples | Measure-Object -Property CookedValue -Sum).Sum, 1
                         )

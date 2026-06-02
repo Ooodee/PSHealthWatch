@@ -34,9 +34,16 @@ function Get-ServiceHealth {
 
     process {
         foreach ($computer in $ComputerName) {
+            $isLocal = $computer -in @($env:COMPUTERNAME, 'localhost', '127.0.0.1', '.')
             foreach ($svc in $ServiceName) {
                 try {
-                    $service = Get-Service -Name $svc -ComputerName $computer -ErrorAction Stop
+                    $service = if ($isLocal) {
+                        Get-Service -Name $svc -ErrorAction Stop
+                    } else {
+                        Invoke-Command -ComputerName $computer -ScriptBlock {
+                            Get-Service -Name $using:svc -ErrorAction Stop
+                        }
+                    }
 
                     [PSCustomObject]@{
                         PSTypeName   = 'PSHealthWatch.HealthResult'

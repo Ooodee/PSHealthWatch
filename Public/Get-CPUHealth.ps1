@@ -29,7 +29,10 @@ function Get-CPUHealth {
     process {
         foreach ($computer in $ComputerName) {
             try {
-                $procs = Get-CimInstance -ClassName Win32_Processor -ComputerName $computer -ErrorAction Stop
+                $isLocal = $computer -in @($env:COMPUTERNAME, 'localhost', '127.0.0.1', '.')
+                $cimArgs = @{ ClassName = 'Win32_Processor'; ErrorAction = 'Stop' }
+                if (-not $isLocal) { $cimArgs.ComputerName = $computer }
+                $procs = Get-CimInstance @cimArgs
                 $load  = [math]::Round(($procs | Measure-Object -Property LoadPercentage -Average).Average, 1)
 
                 [PSCustomObject]@{

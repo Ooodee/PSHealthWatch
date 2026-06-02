@@ -26,7 +26,10 @@ function Get-MemoryHealth {
     process {
         foreach ($computer in $ComputerName) {
             try {
-                $os      = Get-CimInstance -ClassName Win32_OperatingSystem -ComputerName $computer -ErrorAction Stop
+                $isLocal = $computer -in @($env:COMPUTERNAME, 'localhost', '127.0.0.1', '.')
+                $cimArgs = @{ ClassName = 'Win32_OperatingSystem'; ErrorAction = 'Stop' }
+                if (-not $isLocal) { $cimArgs.ComputerName = $computer }
+                $os      = Get-CimInstance @cimArgs
                 $totalGB = [math]::Round($os.TotalVisibleMemorySize / 1MB, 2)
                 $freeGB  = [math]::Round($os.FreePhysicalMemory     / 1MB, 2)
                 $usedGB  = [math]::Round($totalGB - $freeGB, 2)
